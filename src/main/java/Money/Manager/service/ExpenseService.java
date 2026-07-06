@@ -1,14 +1,17 @@
 package Money.Manager.service;
 
 import Money.Manager.dto.ExpenseDTO;
+import Money.Manager.dto.IncomeDTO;
 import Money.Manager.entity.CategoryEntity;
 import Money.Manager.entity.ExpenseEntity;
+import Money.Manager.entity.IncomeEntity;
 import Money.Manager.entity.ProfileEntity;
 import Money.Manager.repository.CategoryRepository;
 import Money.Manager.repository.ExpenseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -60,6 +63,19 @@ public class ExpenseService {
             throw new RuntimeException("Expense does not belong to the current user");
         }
 //        expenseRepository.deleteByIdAndProfileId(expenseId, profile.getId());
+    }
+
+    //get latest 5 expenses
+    public List<ExpenseDTO> getLatest5ExpensesForCurrentUser() {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        List<ExpenseEntity> expenses = expenseRepository.findTop5ByProfileIdOrderByDateDesc(profile.getId());
+        return expenses.stream().map(this::toDTO).toList();
+    }
+
+    public BigDecimal getTotalExpenseByCurrentUser(){
+        ProfileEntity profile = profileService.getCurrentProfile();
+        BigDecimal total = expenseRepository.findTotalExpenseByProfileId(profile.getId());
+        return total != null ? total : BigDecimal.ZERO;
     }
 
     private ExpenseEntity toEntity(ExpenseDTO dto, ProfileEntity profile, CategoryEntity category){

@@ -1,5 +1,6 @@
 package Money.Manager.service;
 
+import Money.Manager.dto.ExpenseDTO;
 import Money.Manager.dto.IncomeDTO;
 import Money.Manager.entity.CategoryEntity;
 import Money.Manager.entity.ExpenseEntity;
@@ -9,6 +10,8 @@ import Money.Manager.repository.CategoryRepository;
 import Money.Manager.repository.IncomeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -35,19 +38,6 @@ public class IncomeService {
         return toDTO(newIncome);
     }
 
-    //delete income by id for current user
-    public void deleteIncomeByIdForCurrentUser(Long incomeId) {
-        ProfileEntity profile = profileService.getCurrentProfile();
-        IncomeEntity entity = incomeRepository.findById(incomeId)
-                .orElseThrow(() -> new RuntimeException("Income not found"));
-        if(entity.getProfile().getId().equals(profile.getId())) {
-            incomeRepository.deleteById(incomeId);
-        } else {
-            throw new RuntimeException("Income does not belong to the current user");
-        }
-//        incomeRepository.deleteByIdAndProfileId(incomeId, profile.getId());
-    }
-
     //get current month incomes
     public List<IncomeDTO> getCurrentMonthIncomesForCurrentUser() {
         ProfileEntity profile = profileService.getCurrentProfile();
@@ -61,6 +51,35 @@ public class IncomeService {
         );
         return incomes.stream().map(this::toDTO).toList();
     }
+
+    //delete income by id for current user
+    public void deleteIncomeByIdForCurrentUser(Long incomeId) {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        IncomeEntity entity = incomeRepository.findById(incomeId)
+                .orElseThrow(() -> new RuntimeException("Income not found"));
+        if(entity.getProfile().getId().equals(profile.getId())) {
+            incomeRepository.deleteById(incomeId);
+        } else {
+            throw new RuntimeException("Income does not belong to the current user");
+        }
+//        incomeRepository.deleteByIdAndProfileId(incomeId, profile.getId());
+    }
+
+    //get latest 5 incomes
+    public List<IncomeDTO> getLatest5IncomesForCurrentUser() {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        List<IncomeEntity> incomes = incomeRepository.findTop5ByProfileIdOrderByDateDesc(profile.getId());
+        return incomes.stream().map(this::toDTO).toList();
+    }
+
+    public BigDecimal getTotalIncomeByCurrentUser(){
+        ProfileEntity profile = profileService.getCurrentProfile();
+        BigDecimal total = incomeRepository.findTotalIncomeByProfileId(profile.getId());
+        return total != null ? total : BigDecimal.ZERO;
+    }
+
+
+
 
     private IncomeEntity toEntity(IncomeDTO dto, ProfileEntity profile, CategoryEntity category){
         return IncomeEntity.builder()

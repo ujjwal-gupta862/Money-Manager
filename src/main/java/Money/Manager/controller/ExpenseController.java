@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -33,5 +34,17 @@ public class ExpenseController {
     public ResponseEntity<Void> deleteExpenseByIdForCurrentUser(@PathVariable Long expenseId) {
         expenseService.deleteExpenseByIdForCurrentUser(expenseId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/latest5")
+    public ResponseEntity<List<ExpenseDTO>> getLatest5ExpensesForCurrentUser() {
+        List<ExpenseDTO> expenses = expenseService.getLatest5ExpensesForCurrentUser();
+        return ResponseEntity.ok(expenses);
+    }
+
+    @GetMapping("/total")
+    public ResponseEntity<BigDecimal> getTotalExpenseByCurrentUser() {
+        BigDecimal total = expenseService.getTotalExpenseByCurrentUser();
+        return ResponseEntity.ok(total);
     }
 }

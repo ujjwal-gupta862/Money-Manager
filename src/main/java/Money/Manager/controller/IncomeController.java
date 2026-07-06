@@ -8,11 +8,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
 @RestController
-@RequestMapping
+@RequestMapping("/incomes")
 @RequiredArgsConstructor
 public class IncomeController {
     private final IncomeService incomeService;
@@ -34,5 +35,17 @@ public class IncomeController {
     public ResponseEntity<Void> deleteIncomeByIdForCurrentUser(@PathVariable Long incomeId) {
         incomeService.deleteIncomeByIdForCurrentUser(incomeId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/latest5")
+    public ResponseEntity<List<IncomeDTO>> getLatest5IncomesForCurrentUser() {
+        List<IncomeDTO> incomes = incomeService.getLatest5IncomesForCurrentUser();
+        return ResponseEntity.ok(incomes);
+    }
+
+    @GetMapping("/total")
+    public ResponseEntity<BigDecimal> getTotalIncomeByCurrentUser() {
+        BigDecimal total = incomeService.getTotalIncomeByCurrentUser();
+        return ResponseEntity.ok(total);
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +18,7 @@ public interface ExpenseRepository extends JpaRepository<ExpenseEntity, Long> {
     List<ExpenseEntity> findTop5ByProfileIdOrderByDateDesc(Long profileId);
 
     @Query("SELECT e FROM ExpenseEntity e WHERE e.profile.id = :profileId")
-    List<ExpenseEntity> findTotalExpenseByProfileId(@Param("profileId") Long profileId);
+    BigDecimal findTotalExpenseByProfileId(@Param("profileId") Long profileId);
 
     List<ExpenseEntity> findByProfileIdAndDateBetweenAndNameContainingIgnoreCase(
             Long profileId,
