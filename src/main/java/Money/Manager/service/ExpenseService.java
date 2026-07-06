@@ -9,13 +9,16 @@ import Money.Manager.repository.ExpenseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ExpenseService {
-    private CategoryService categoryService;
-    private CategoryRepository categoryRepository;
-    private ExpenseRepository expenseRepository;
-    private ProfileService profileService;
+    private final CategoryService categoryService;
+    private final CategoryRepository categoryRepository;
+    private final ExpenseRepository expenseRepository;
+    private final ProfileService profileService;
 
     // Adds a new expense to the database
     public ExpenseDTO addExpense(ExpenseDTO dto) {
@@ -32,19 +35,44 @@ public class ExpenseService {
         return toDTO(newExpense);
     }
 
+    //get current month expenses
+    public List<ExpenseDTO> getCurrentMonthExpensesForCurrentUser() {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        LocalDate now = LocalDate.now();
+        LocalDate startDate = now.withDayOfMonth(1);
+        LocalDate endDate = now.withDayOfMonth(now.lengthOfMonth());
+        List<ExpenseEntity> expenses = expenseRepository.findByProfileIdAndDateBetween(
+                profile.getId(),
+                startDate,
+                endDate
+        );
+        return expenses.stream().map(this::toDTO).toList();
+    }
+
+    //delete expense by id for current user
+    public void deleteExpenseByIdForCurrentUser(Long expenseId) {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        ExpenseEntity entity = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+        if(entity.getProfile().getId().equals(profile.getId())) {
+            expenseRepository.deleteById(expenseId);
+        } else {
+            throw new RuntimeException("Expense does not belong to the current user");
+        }
+//        expenseRepository.deleteByIdAndProfileId(expenseId, profile.getId());
+    }
+
     private ExpenseEntity toEntity(ExpenseDTO dto, ProfileEntity profile, CategoryEntity category){
         return ExpenseEntity.builder()
-                .id(dto.getId())
                 .name(dto.getName())
                 .icon(dto.getIcon())
                 .date(dto.getDate())
                 .amount(dto.getAmount())
-                .createdAt(dto.getCreatedAt())
-                .updatedAt(dto.getUpdatedAt())
                 .category(category)
                 .profile(profile)
                 .build();
     }
+
     private ExpenseDTO toDTO(ExpenseEntity entity) {
 
         return ExpenseDTO.builder()
@@ -55,8 +83,6 @@ public class ExpenseService {
                 .categoryName(entity.getCategory() != null ? entity.getCategory().getName() : "N/A")
                 .amount(entity.getAmount())
                 .date(entity.getDate())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 }

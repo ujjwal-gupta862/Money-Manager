@@ -1,6 +1,5 @@
 package Money.Manager.service;
 
-import Money.Manager.dto.ExpenseDTO;
 import Money.Manager.dto.IncomeDTO;
 import Money.Manager.entity.CategoryEntity;
 import Money.Manager.entity.ExpenseEntity;
@@ -10,14 +9,16 @@ import Money.Manager.repository.CategoryRepository;
 import Money.Manager.repository.IncomeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class IncomeService {
-    private CategoryService categoryService;
-    private IncomeRepository incomeRepository;
-    private ProfileService profileService;
-    private CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
+    private final IncomeRepository incomeRepository;
+    private final ProfileService profileService;
+    private final CategoryRepository categoryRepository;
 
     // Adds a new income to the database
     public IncomeDTO addIncome(IncomeDTO dto) {
@@ -34,16 +35,39 @@ public class IncomeService {
         return toDTO(newIncome);
     }
 
+    //delete income by id for current user
+    public void deleteIncomeByIdForCurrentUser(Long incomeId) {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        IncomeEntity entity = incomeRepository.findById(incomeId)
+                .orElseThrow(() -> new RuntimeException("Income not found"));
+        if(entity.getProfile().getId().equals(profile.getId())) {
+            incomeRepository.deleteById(incomeId);
+        } else {
+            throw new RuntimeException("Income does not belong to the current user");
+        }
+//        incomeRepository.deleteByIdAndProfileId(incomeId, profile.getId());
+    }
+
+    //get current month incomes
+    public List<IncomeDTO> getCurrentMonthIncomesForCurrentUser() {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        LocalDate now = LocalDate.now();
+        LocalDate startDate = now.withDayOfMonth(1);
+        LocalDate endDate = now.withDayOfMonth(now.lengthOfMonth());
+        List<IncomeEntity> incomes = incomeRepository.findByProfileIdAndDateBetween(
+                profile.getId(),
+                startDate,
+                endDate
+        );
+        return incomes.stream().map(this::toDTO).toList();
+    }
 
     private IncomeEntity toEntity(IncomeDTO dto, ProfileEntity profile, CategoryEntity category){
         return IncomeEntity.builder()
-                .id(dto.getId())
                 .name(dto.getName())
                 .icon(dto.getIcon())
                 .date(dto.getDate())
                 .amount(dto.getAmount())
-                .createdAt(dto.getCreatedAt())
-                .updatedAt(dto.getUpdatedAt())
                 .category(category)
                 .profile(profile)
                 .build();

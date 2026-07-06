@@ -11,9 +11,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface IncomeRepository extends JpaRepository<IncomeEntity, Long> {
-    List<IncomeEntity> findByProfileIdOrderByDatesDesc(Long profileId);
+    List<IncomeEntity> findByProfileIdOrderByDateDesc(Long profileId);
 
-    List<IncomeEntity> findByTop5ByProfileIdOrderByDatesDesc(Long profileId);
+    List<IncomeEntity> findTop5ByProfileIdOrderByDateDesc(Long profileId);
 
     @Query("SELECT e FROM IncomeEntity e WHERE e.profile.id = :profileId")
     List<IncomeEntity> findTotalIncomeByProfileId(@Param("profileId") Long profileId);

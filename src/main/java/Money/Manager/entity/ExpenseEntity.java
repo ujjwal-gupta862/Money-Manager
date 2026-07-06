@@ -47,7 +47,7 @@ public class ExpenseEntity {
     @PrePersist
     public void prePersist(){
         if(this.date == null){
-            createdAt = LocalDateTime.now();
+            this.date = LocalDate.now();
         }
     }
 }

@@ -12,9 +12,9 @@ import java.util.Optional;
 
 public interface ExpenseRepository extends JpaRepository<ExpenseEntity, Long> {
 
-    List<ExpenseEntity> findByProfileIdOrderByDatesDesc(Long profileId);
+    List<ExpenseEntity> findByProfileIdOrderByDateDesc(Long profileId);
 
-    List<ExpenseEntity> findByTop5ByProfileIdOrderByDatesDesc(Long profileId);
+    List<ExpenseEntity> findTop5ByProfileIdOrderByDateDesc(Long profileId);
 
     @Query("SELECT e FROM ExpenseEntity e WHERE e.profile.id = :profileId")
     List<ExpenseEntity> findTotalExpenseByProfileId(@Param("profileId") Long profileId);
@@ -32,4 +32,6 @@ public interface ExpenseRepository extends JpaRepository<ExpenseEntity, Long> {
             LocalDate startDate,
             LocalDate endDate
     );
+
+    void deleteByIdAndProfileId(Long id, Long profileId);
 }
