@@ -4,18 +4,18 @@ import Money.Manager.dto.ExpenseDTO;
 import Money.Manager.dto.IncomeDTO;
 import Money.Manager.dto.RecentTransactionDTO;
 import Money.Manager.entity.ProfileEntity;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
+
+import static java.util.stream.Stream.concat;
 
 @Service
 @RequiredArgsConstructor
-@Builder
 public class DashBoardService {
     private final ProfileService profileService;
     private final IncomeService incomeService;
@@ -29,8 +29,10 @@ public class DashBoardService {
 
         List<IncomeDTO> latestIncomes = incomeService.getLatest5IncomesForCurrentUser();
         List<ExpenseDTO> latestExpenses = expenseService.getLatest5ExpensesForCurrentUser();
+        BigDecimal totalIncome = incomeService.getTotalIncomeByCurrentUser();
+        BigDecimal totalExpense = expenseService.getTotalExpenseByCurrentUser();
 
-        Stream.concat(
+        List<RecentTransactionDTO> latestTransactions = concat(
                 latestIncomes.stream().map(income ->
                         RecentTransactionDTO.builder()
                                 .id(income.getId())
@@ -55,7 +57,22 @@ public class DashBoardService {
                                 .updatedAt(expense.getUpdatedAt())
                                 .type("expense")
                                 .build())
-        );
+        ).sorted((a, b) -> {
+            int cmp = b.getDate().compareTo(a.getDate());
+
+            if (cmp == 0 && a.getCreatedAt() != null && b.getCreatedAt() != null) {
+                return b.getCreatedAt().compareTo(a.getCreatedAt());
+            }
+
+            return cmp;
+        }).toList();
+
+        returnValue.put("totalBalance", totalIncome.subtract(totalExpense));
+        returnValue.put("totalIncome", totalIncome);
+        returnValue.put("totalExpense", totalExpense);
+        returnValue.put("recent5Incomes", latestIncomes);
+        returnValue.put("recent5Expenses", latestExpenses);
+        returnValue.put("recentTransactions", latestTransactions);
 
         return returnValue;
     }

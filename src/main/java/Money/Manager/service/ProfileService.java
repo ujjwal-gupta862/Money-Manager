@@ -63,16 +63,6 @@ public class ProfileService {
                 .build();
     }
 
-    public boolean activateProfile(String activationToken) {
-        return profileRepository.findByActivationToken(activationToken)
-                .map(profile -> {
-                    profile.setIsActive(true);
-                    profileRepository.save(profile);
-                    return true;
-                })
-                .orElse(false);
-    }
-
     public ProfileEntity getCurrentProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return profileRepository.findByEmail(authentication.getName())

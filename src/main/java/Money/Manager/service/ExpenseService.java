@@ -9,6 +9,7 @@ import Money.Manager.entity.ProfileEntity;
 import Money.Manager.repository.CategoryRepository;
 import Money.Manager.repository.ExpenseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -36,6 +37,31 @@ public class ExpenseService {
         newExpense = expenseRepository.save(newExpense);
 
         return toDTO(newExpense);
+    }
+
+    //filter expenses
+    public List<ExpenseDTO> filterExpenses(LocalDate startDate,
+                                           LocalDate endDate,
+                                           String keyword,
+                                           Sort sort) {
+
+        ProfileEntity profile = profileService.getCurrentProfile();
+        List<ExpenseEntity> list = expenseRepository.findByProfileIdAndDateBetweenAndNameContainingIgnoreCase(profile.getId(),
+                        startDate,
+                        endDate,
+                        keyword,
+                        sort
+                );
+
+        return list.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    //notification
+    public List<ExpenseDTO> getExpensesForUserOnDate(Long profileId, LocalDate date){
+        List<ExpenseEntity> expenses = expenseRepository.findByProfileIdAndDate(profileId, date);
+        return expenses.stream().map(this::toDTO).toList();
     }
 
     //get current month expenses
@@ -99,6 +125,8 @@ public class ExpenseService {
                 .categoryName(entity.getCategory() != null ? entity.getCategory().getName() : "N/A")
                 .amount(entity.getAmount())
                 .date(entity.getDate())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 }

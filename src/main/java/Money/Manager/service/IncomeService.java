@@ -9,6 +9,7 @@ import Money.Manager.entity.ProfileEntity;
 import Money.Manager.repository.CategoryRepository;
 import Money.Manager.repository.IncomeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -50,6 +51,25 @@ public class IncomeService {
                 endDate
         );
         return incomes.stream().map(this::toDTO).toList();
+    }
+
+    //filter incomes
+    public List<IncomeDTO> filterIncomes(LocalDate startDate,
+                                         LocalDate endDate,
+                                         String keyword,
+                                         Sort sort) {
+
+        ProfileEntity profile = profileService.getCurrentProfile();
+        List<IncomeEntity> list = incomeRepository.findByProfileIdAndDateBetweenAndNameContainingIgnoreCase(profile.getId(),
+                startDate,
+                endDate,
+                keyword,
+                sort
+        );
+
+        return list.stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     //delete income by id for current user
